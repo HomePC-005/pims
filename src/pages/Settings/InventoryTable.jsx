@@ -11,7 +11,7 @@ import {
     message,
     Popconfirm,
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { supabase } from '../../lib/supabase';
 
 const { TextArea } = Input;
@@ -193,28 +193,26 @@ const InventoryTable = () => {
         {
             title: 'Actions',
             key: 'actions',
-            fixed: 'right',
-            width: 120,
+            width: 80,
+            align: 'center',
             render: (_, record) => (
-                <Space size="small">
+                <Popconfirm
+                    title="Delete this drug?"
+                    onConfirm={(e) => {
+                        e.stopPropagation();
+                        handleDelete(record.id);
+                    }}
+                    okText="Yes"
+                    cancelText="No"
+                    onCancel={(e) => e.stopPropagation()}
+                >
                     <Button
-                        type="link"
-                        icon={<EditOutlined />}
-                        onClick={() => handleEdit(record)}
-                    >
-                        Edit
-                    </Button>
-                    <Popconfirm
-                        title="Delete this drug?"
-                        onConfirm={() => handleDelete(record.id)}
-                        okText="Yes"
-                        cancelText="No"
-                    >
-                        <Button type="link" danger icon={<DeleteOutlined />}>
-                            Delete
-                        </Button>
-                    </Popconfirm>
-                </Space>
+                        type="text"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                </Popconfirm>
             ),
         },
     ];
@@ -237,6 +235,10 @@ const InventoryTable = () => {
                 rowKey="id"
                 loading={loading}
                 scroll={{ x: 1200 }}
+                onRow={(record) => ({
+                    onClick: () => handleEdit(record),
+                    style: { cursor: 'pointer' },
+                })}
                 pagination={{
                     pageSize: 10,
                     showSizeChanger: true,

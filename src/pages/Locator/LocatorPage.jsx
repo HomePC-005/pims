@@ -186,47 +186,91 @@ const LocatorPage = () => {
                 {/* List View */}
                 {!loading && filteredDrugs.length > 0 && viewMode === 'list' && (
                     <List
-                        itemLayout="horizontal"
+                        grid={{
+                            gutter: 16,
+                            xs: 1,
+                            sm: 1,
+                            md: 2,
+                            lg: 2,
+                            xl: 3,
+                            xxl: 3,
+                        }}
                         dataSource={filteredDrugs}
                         renderItem={(drug) => (
-                            <List.Item
-                                style={{ cursor: 'pointer', padding: '16px' }}
-                                onClick={() => handleDrugClick(drug)}
-                                extra={
-                                    drug.image_url && (
-                                        <img
-                                            width={100}
-                                            alt={drug.name}
-                                            src={drug.image_url}
-                                            style={{ borderRadius: 4 }}
-                                        />
-                                    )
-                                }
-                            >
-                                <List.Item.Meta
-                                    title={<Text strong>{drug.name}</Text>}
-                                    description={
-                                        <Space direction="vertical" size="small">
-                                            <Space>
-                                                <Tag color={getTypeColor(drug.type)}>{drug.type}</Tag>
+                            <List.Item style={{ marginBottom: 0 }}>
+                                <div
+                                    style={{
+                                        cursor: 'pointer',
+                                        padding: '12px',
+                                        border: '1px solid #f0f0f0',
+                                        borderRadius: '8px',
+                                        transition: 'all 0.3s',
+                                        height: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                    }}
+                                    onClick={() => handleDrugClick(drug)}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.borderColor = '#1890ff';
+                                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.borderColor = '#f0f0f0';
+                                        e.currentTarget.style.boxShadow = 'none';
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <Text strong style={{ fontSize: '14px', display: 'block', marginBottom: '8px' }}>
+                                                {drug.name}
+                                            </Text>
+                                            <Space wrap size={[4, 4]} style={{ marginBottom: '8px' }}>
+                                                <Tag color={getTypeColor(drug.type)} style={{ margin: 0, fontSize: '11px' }}>
+                                                    {drug.type}
+                                                </Tag>
                                                 {drug.indent_source && (
-                                                    <Tag color={getSourceColor(drug.indent_source)}>
+                                                    <Tag color={getSourceColor(drug.indent_source)} style={{ margin: 0, fontSize: '11px' }}>
                                                         {drug.indent_source}
                                                     </Tag>
                                                 )}
                                             </Space>
-                                            <Space>
-                                                <EnvironmentOutlined style={{ color: '#1890ff' }} />
-                                                <Text type="secondary">{drug.location_code}</Text>
-                                            </Space>
-                                            {drug.remarks && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                                                <EnvironmentOutlined style={{ color: '#1890ff', fontSize: '12px' }} />
                                                 <Text type="secondary" style={{ fontSize: '12px' }}>
+                                                    {drug.location_code}
+                                                </Text>
+                                            </div>
+                                            {drug.remarks && (
+                                                <Text
+                                                    type="secondary"
+                                                    style={{
+                                                        fontSize: '11px',
+                                                        display: 'block',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        whiteSpace: 'nowrap'
+                                                    }}
+                                                    title={drug.remarks}
+                                                >
                                                     {drug.remarks}
                                                 </Text>
                                             )}
-                                        </Space>
-                                    }
-                                />
+                                        </div>
+                                        {drug.image_url && (
+                                            <img
+                                                width={60}
+                                                height={60}
+                                                alt={drug.name}
+                                                src={drug.image_url}
+                                                style={{
+                                                    borderRadius: 4,
+                                                    objectFit: 'cover',
+                                                    flexShrink: 0
+                                                }}
+                                            />
+                                        )}
+                                    </div>
+                                </div>
                             </List.Item>
                         )}
                     />

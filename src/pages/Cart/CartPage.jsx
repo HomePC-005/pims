@@ -16,11 +16,15 @@ import {
 import {
     DeleteOutlined,
     EditOutlined,
-    PrinterOutlined,
+    FilePdfOutlined,
     CheckCircleOutlined,
     EnvironmentOutlined,
+    FileExcelOutlined,
 } from '@ant-design/icons';
 import { supabase } from '../../lib/supabase';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const { Title, Text } = Typography;
 const { Panel } = Collapse;
@@ -137,8 +141,175 @@ const CartPage = () => {
         }
     };
 
-    const handlePrint = () => {
-        window.print();
+    const handleExportToPDF = () => {
+        try {
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+
+            // Loop through each source (IPD, OPD, MFG)
+            Object.entries(groupedItems).forEach(([source, items], sourceIndex) => {
+                if (items.length === 0) return;
+
+                // Add new page for each source after the first
+                if (sourceIndex > 0) {
+                    doc.addPage();
+                }
+
+                let yPosition = 15;
+
+                // Header - Form Reference
+                doc.setFontSize(10);
+                doc.text('AM 6.5 LAMPIRAN B', pageWidth - 15, yPosition, { align: 'right' });
+                yPosition += 5;
+                doc.text('KEWPS-8', pageWidth - 15, yPosition, { align: 'right' });
+                yPosition += 10;
+
+                // Title
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'bold');
+                const title = `BORANG PERMOHONAN STOK UBAT (SUBSTOR ${source})`;
+                doc.text(title, pageWidth / 2, yPosition, { align: 'center' });
+                yPosition += 10;
+
+                // Table data
+                const tableData = items.map((item, idx) => [
+                    (idx + 1).toString(),
+                    item.inventory_items?.name || '',
+                    item.requested_qty || 0,
+                    '', // Catatan (empty)
+                ]);
+
+                // Create table with pagination
+                autoTable(doc, {
+                    startY: yPosition,
+                    head: [[
+                        { content: 'No Kod', styles: { halign: 'center' } },
+                        { content: 'Perihal stok', styles: { halign: 'center' } },
+                        { content: 'Kuantiti', styles: { halign: 'center' } },
+                        { content: 'Catatan', styles: { halign: 'center' } },
+                    ]],
+                    body: tableData,
+                    theme: 'grid',
+                    styles: {
+                        fontSize: 10,
+                        cellPadding: 3,
+                    },
+                    headStyles: {
+                        fillColor: [255, 255, 255],
+                        textColor: [0, 0, 0],
+                        fontStyle: 'bold',
+                        lineWidth: 0.5,
+                        lineColor: [0, 0, 0],
+                    },
+                    bodyStyles: {
+                        lineWidth: 0.5,
+                        lineColor: [0, 0, 0],
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 20, halign: 'center' },
+                        1: { cellWidth: 80 },
+                        2: { cellWidth: 25, halign: 'center' },
+                        3: { cellWidth: 60 },
+                    },
+                    margin: { bottom: 60 }, // Reserve space for signatures
+                    didDrawPage: function (data) {
+                        // Add signature section on every page
+                        const finalY = pageHeight - 50;
+
+                        doc.setFontSize(9);
+                        doc.setFont(undefined, 'normal');
+
+                        // Left section - Pemohon
+                        const leftX = 15;
+                        doc.text('Pemohon', leftX, finalY);
+                        doc.text('(Tandatangan)', leftX, finalY + 15);
+                        doc.text('Nama : Muhd Redzuan', leftX, finalY + 20);
+                        doc.text('Jawatan : Pegawai Farmasi UF48', leftX, finalY + 25);
+                        doc.text('Tarikh :', leftX, finalY + 30);
+
+                        // Middle section - Pegawai Pelulus
+                        const middleX = pageWidth / 2 - 20;
+                        doc.text('Pegawai Pelulus', middleX, finalY);
+                        doc.text('(Tandatangan)', middleX, finalY + 15);
+                        doc.text('Nama :', middleX, finalY + 20);
+                        doc.text('Jawatan :', middleX, finalY + 25);
+                        doc.text('Tarikh :', middleX, finalY + 30);
+
+                        // Right section - Pemohon/Wakil
+                        const rightX = pageWidth - 60;
+                        doc.text('Penerima', rightX, finalY);
+                        doc.text('(Tandatangan)', rightX, finalY + 15);
+                        doc.text('Nama :  ', rightX, finalY + 20);
+                        doc.text('Jawatan :  ', rightX, finalY + 25);
+                        doc.text('Tarikh :', rightX, finalY + 30);
+                    }
+                });
+            });
+
+            // Generate filename with timestamp
+            const timestamp = new Date().toISOString().split('T')[0];
+            const filename = `Indent_Request_${timestamp}.pdf`;
+
+            // Save PDF
+            doc.save(filename);
+            message.success('PDF exported successfully!');
+        } catch (error) {
+            console.error('Error exporting to PDF:', error);
+            message.error('Failed to export to PDF');
+        }
+    };
+
+    const handleExportToExcel = () => {
+        try {
+            // Create workbook
+            const wb = XLSX.utils.book_new();
+
+            // Prepare data for each source
+            Object.entries(groupedItems).forEach(([source, items]) => {
+                if (items.length === 0) return;
+
+                // Create worksheet data
+                const wsData = [
+                    // Header row
+                    ['Drug Name', 'Type', 'Location', 'Quantity', 'Remarks'],
+                    // Data rows
+                    ...items.map(item => [
+                        item.inventory_items?.name || '',
+                        item.inventory_items?.type || '',
+                        item.inventory_items?.location_code || '',
+                        item.requested_qty || 0,
+                        item.inventory_items?.remarks || ''
+                    ])
+                ];
+
+                // Create worksheet
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+                // Set column widths
+                ws['!cols'] = [
+                    { wch: 30 }, // Drug Name
+                    { wch: 15 }, // Type
+                    { wch: 12 }, // Location
+                    { wch: 10 }, // Quantity
+                    { wch: 40 }  // Remarks
+                ];
+
+                // Add worksheet to workbook
+                XLSX.utils.book_append_sheet(wb, ws, source);
+            });
+
+            // Generate filename with timestamp
+            const timestamp = new Date().toISOString().split('T')[0];
+            const filename = `Indent_Cart_${timestamp}.xlsx`;
+
+            // Save file
+            XLSX.writeFile(wb, filename);
+            message.success('Excel file exported successfully!');
+        } catch (error) {
+            console.error('Error exporting to Excel:', error);
+            message.error('Failed to export to Excel');
+        }
     };
 
     const getSourceColor = (source) => {
@@ -169,7 +340,7 @@ const CartPage = () => {
             icon={<EditOutlined />}
             onClick={() => handleEdit(item)}
         >
-            Edit
+            <span className="action-text">Edit</span>
         </Button>,
         <Popconfirm
             key="delete"
@@ -179,10 +350,32 @@ const CartPage = () => {
             cancelText="No"
         >
             <Button type="link" danger icon={<DeleteOutlined />}>
-                Delete
+                <span className="action-text">Delete</span>
             </Button>
         </Popconfirm>,
     ];
+
+    const renderMobileActions = (item) => (
+        <Space size="small">
+            <Button
+                size="small"
+                icon={<EditOutlined />}
+                onClick={() => handleEdit(item)}
+            />
+            <Popconfirm
+                title="Remove?"
+                onConfirm={() => handleDelete(item.id)}
+                okText="Yes"
+                cancelText="No"
+            >
+                <Button
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                />
+            </Popconfirm>
+        </Space>
+    );
 
     if (loading) {
         return (
@@ -198,20 +391,43 @@ const CartPage = () => {
         <div className="cart-page">
             <Space direction="vertical" size="large" style={{ width: '100%' }}>
                 {/* Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    flexWrap: 'wrap',
+                    gap: '16px'
+                }}>
                     <div>
-                        <Title level={3}>Indent Cart</Title>
+                        <Title level={3} style={{ margin: 0 }}>Indent Cart</Title>
                         <Text type="secondary">
                             {totalItems} {totalItems === 1 ? 'item' : 'items'} pending
                         </Text>
                     </div>
-                    <Space>
+                    <Space wrap>
                         <Button
-                            icon={<PrinterOutlined />}
-                            onClick={handlePrint}
+                            icon={<FileExcelOutlined />}
+                            onClick={handleExportToExcel}
                             disabled={totalItems === 0}
+                            style={{
+                                backgroundColor: totalItems === 0 ? undefined : '#217346',
+                                borderColor: '#217346',
+                                color: totalItems === 0 ? undefined : '#fff'
+                            }}
                         >
-                            Print
+                            <span className="button-text">Export to Excel</span>
+                        </Button>
+                        <Button
+                            icon={<FilePdfOutlined />}
+                            onClick={handleExportToPDF}
+                            disabled={totalItems === 0}
+                            style={{
+                                backgroundColor: totalItems === 0 ? undefined : '#DC3545',
+                                borderColor: '#DC3545',
+                                color: totalItems === 0 ? undefined : '#fff'
+                            }}
+                        >
+                            <span className="button-text">Export to PDF</span>
                         </Button>
                         <Button
                             type="primary"
@@ -219,7 +435,7 @@ const CartPage = () => {
                             onClick={handleApproveIndent}
                             disabled={totalItems === 0}
                         >
-                            Approve Indent
+                            <span className="button-text">Clear All</span>
                         </Button>
                     </Space>
                 </div>
@@ -248,7 +464,10 @@ const CartPage = () => {
                                     <List
                                         dataSource={items}
                                         renderItem={(item) => (
-                                            <List.Item actions={renderItemActions(item)}>
+                                            <List.Item
+                                                actions={window.innerWidth > 768 ? renderItemActions(item) : undefined}
+                                                style={{ flexWrap: 'wrap' }}
+                                            >
                                                 <List.Item.Meta
                                                     title={
                                                         <Space>
@@ -275,6 +494,10 @@ const CartPage = () => {
                                                         </Space>
                                                     }
                                                 />
+                                                {/* Mobile actions */}
+                                                <div className="mobile-actions">
+                                                    {renderMobileActions(item)}
+                                                </div>
                                             </List.Item>
                                         )}
                                     />
@@ -303,26 +526,95 @@ const CartPage = () => {
                 </Space>
             </Modal>
 
-            {/* Print Styles */}
+            {/* Responsive Styles */}
             <style>{`
-        @media print {
-          .ant-layout-header,
-          .ant-layout-sider,
-          .ant-btn,
-          .cart-page .ant-space-item:first-child {
-            display: none !important;
-          }
-          
-          .cart-page {
-            padding: 20px;
-          }
-          
-          .ant-collapse-header {
-            background: #f0f0f0 !important;
-            font-weight: bold;
-          }
-        }
-      `}</style>
+                /* Excel button styling */
+                .ant-btn:has(.anticon-file-excel) {
+                    transition: all 0.3s ease;
+                }
+                
+                .ant-btn:has(.anticon-file-excel):hover:not(:disabled) {
+                    background-color: #1a5c37 !important;
+                    border-color: #1a5c37 !important;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(33, 115, 70, 0.3);
+                }
+                
+                /* PDF button styling */
+                .ant-btn:has(.anticon-file-pdf) {
+                    transition: all 0.3s ease;
+                }
+                
+                .ant-btn:has(.anticon-file-pdf):hover:not(:disabled) {
+                    background-color: #c82333 !important;
+                    border-color: #c82333 !important;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+                }
+                
+                /* Desktop: show desktop actions, hide mobile actions */
+                @media (min-width: 769px) {
+                    .mobile-actions {
+                        display: none;
+                    }
+                }
+                
+                /* Mobile: hide desktop actions, show mobile actions */
+                @media (max-width: 768px) {
+                    .button-text {
+                        display: none;
+                    }
+                    
+                    .action-text {
+                        display: none;
+                    }
+                    
+                    .ant-list-item-action {
+                        display: none !important;
+                    }
+                    
+                    .mobile-actions {
+                        display: block;
+                        width: 100%;
+                        margin-top: 12px;
+                        padding-top: 12px;
+                        border-top: 1px solid #f0f0f0;
+                    }
+                    
+                    .ant-list-item {
+                        padding: 12px !important;
+                        flex-direction: column;
+                        align-items: flex-start !important;
+                    }
+                    
+                    .ant-list-item-meta {
+                        width: 100%;
+                    }
+                    
+                    .ant-collapse-header {
+                        padding: 12px !important;
+                    }
+                    
+                    .ant-space-horizontal {
+                        gap: 8px !important;
+                    }
+                }
+                
+                @media (max-width: 480px) {
+                    .cart-page .ant-typography h3 {
+                        font-size: 18px !important;
+                    }
+                    
+                    .ant-btn {
+                        padding: 4px 8px !important;
+                    }
+                    
+                    .ant-tag {
+                        font-size: 11px !important;
+                        padding: 0 4px !important;
+                    }
+                }
+            `}</style>
         </div>
     );
 };

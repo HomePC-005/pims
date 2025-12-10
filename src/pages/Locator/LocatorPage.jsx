@@ -248,7 +248,7 @@ const LocatorPage = () => {
                             pageSizeOptions: ['12', '24', '48', '96'],
                         }}
                         renderItem={(drug) => (
-                            <List.Item style={{ marginBottom: 0 }}>
+                            <List.Item style={{ marginBottom: 8 }}>
                                 <div
                                     style={{
                                         cursor: 'pointer',

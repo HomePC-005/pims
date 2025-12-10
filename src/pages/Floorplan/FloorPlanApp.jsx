@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { Modal, Row, Col, Typography, Spin, Empty, Button, message, Segmented } from 'antd';
 import { supabase } from '../../lib/supabase';
-import './FloorPlan.css'; // We will write this CSS next
+import DrugCard from '../../components/DrugCard';
+import DrugDetailModal from '../Locator/DrugDetailModal'; // Reuse existing detail modal if needed
+import './FloorPlan.css';
 
-
+const { Title, Text } = Typography;
 
 const FloorPlanApp = () => {
   const [selectedCabinet, setSelectedCabinet] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const cabinets = [
     // --- Kaunter Depan ---
@@ -32,6 +36,16 @@ const FloorPlanApp = () => {
     { id: 'Fr', top: '75%', left: '4.5%', width: '7%', height: '9%' },
   ];
 
+  const handleCabinetClick = (cabId) => {
+    setSelectedCabinet(cabId);
+    setIsModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
+    setSelectedCabinet(null);
+  };
+
   return (
     <div className="app-container">
       <h1>Farmasi Kecemasan - Floor Plan</h1>
@@ -51,7 +65,7 @@ const FloorPlanApp = () => {
               width: cab.width,
               height: cab.height,
             }}
-            onClick={() => setSelectedCabinet(cab.id)}
+            onClick={() => handleCabinetClick(cab.id)}
             title={`Cabinet ${cab.id}`} // Tooltip on hover
           >
             <span className="zone-label">{cab.id}</span>
@@ -60,84 +74,130 @@ const FloorPlanApp = () => {
       </div>
 
       {/* THE MODAL (Shows when a cabinet is selected) */}
-      {selectedCabinet && (
-        <CabinetModal
-          cabinetId={selectedCabinet}
-          onClose={() => setSelectedCabinet(null)}
-        />
-      )}
+      <CabinetModal
+        cabinetId={selectedCabinet}
+        visible={isModalVisible}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 };
 
 // --- Sub-Component: The Popup Modal ---
-const CabinetModal = ({ cabinetId, onClose }) => {
-  const [selectedRow, setSelectedRow] = useState(null);
+const CabinetModal = ({ cabinetId, visible, onClose }) => {
+  const [selectedRow, setSelectedRow] = useState(1);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [selectedDrug, setSelectedDrug] = useState(null);
 
-  // Fetch items when a row is clicked
+  // Available rows - could be fetched dynamically, but hardcoded 1-6 for now as per likely requirement
+  const rows = [1, 2, 3, 4, 5, 6];
+
+  useEffect(() => {
+    if (visible && cabinetId) {
+      fetchItems(selectedRow);
+    } else {
+      // Reset state when closed
+      setItems([]);
+      setSelectedRow(1);
+    }
+  }, [visible, cabinetId]);
+
+  // Fetch items when row changes
+  useEffect(() => {
+    if (visible && cabinetId) {
+      fetchItems(selectedRow);
+    }
+  }, [selectedRow]);
+
   const fetchItems = async (rowNum) => {
+    if (!cabinetId) return;
+
     setLoading(true);
-    setSelectedRow(rowNum);
+    try {
+      const { data, error } = await supabase
+        .from('inventory_items')
+        .select('*')
+        .eq('section', cabinetId) // User specified: cabinetID matches drug.section
+        .eq('row', rowNum);       // User specified: row matches drug.row
 
-    const { data, error } = await supabase
-      .from('inventory_items')
-      .select('*')
-      .eq('cabinet_id', cabinetId)
-      .eq('row_number', rowNum);
+      if (error) {
+        console.error('Error fetching:', error);
+        message.error('Failed to load items');
+      } else {
+        setItems(data || []);
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    if (error) console.error('Error fetching:', error);
-    else setItems(data || []);
-
-    setLoading(false);
+  const handleDrugClick = (drug) => {
+    setSelectedDrug(drug);
+    setDetailModalVisible(true);
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Cabinet {cabinetId}</h2>
-          <button onClick={onClose} className="close-btn"> X </button>
-        </div>
+    <>
+      <Modal
+        title={<Title level={3}>Cabinet {cabinetId}</Title>}
+        open={visible}
+        onCancel={onClose}
+        footer={[
+          <Button key="close" onClick={onClose}>
+            Close
+          </Button>
+        ]}
+        width={1000}
+        centered
+        destroyOnClose
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-        <div className="modal-body">
-          {/* Left Side: 6 Clickable Rows */}
-          <div className="shelf-tower">
-            <h3>Select a Row</h3>
-            {[1, 2, 3, 4, 5, 6].map((rowNum) => (
-              <div
-                key={rowNum}
-                className={`shelf-row ${selectedRow === rowNum ? 'active' : ''}`}
-                onClick={() => fetchItems(rowNum)}
-              >
-                Row {rowNum}
+          {/* Row Selection */}
+          <div>
+            <Text type="secondary" style={{ marginRight: 10 }}>Select Row:</Text>
+            <Segmented
+              options={rows.map(r => ({ label: `Row ${r}`, value: r }))}
+              value={selectedRow}
+              onChange={setSelectedRow}
+            />
+          </div>
+
+          {/* Content Area */}
+          <div style={{ minHeight: '300px' }}>
+            {loading ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}>
+                <Spin size="large" />
               </div>
-            ))}
-          </div>
-
-          {/* Right Side: Item Display */}
-          <div className="items-display">
-            <h3>Items in Row {selectedRow ? selectedRow : '...'}</h3>
-
-            {loading && <p>Loading...</p>}
-
-            {!loading && selectedRow && items.length === 0 && (
-              <p className="text-muted">No items found in this row.</p>
+            ) : items.length > 0 ? (
+              <Row gutter={[16, 16]}>
+                {items.map((item) => (
+                  <Col xs={24} sm={12} md={8} lg={6} key={item.id}>
+                    <DrugCard
+                      drug={item}
+                      onClick={() => handleDrugClick(item)}
+                    />
+                  </Col>
+                ))}
+              </Row>
+            ) : (
+              <Empty description={`No items found in Row ${selectedRow}`} />
             )}
-
-            <ul className="item-list">
-              {items.map((item) => (
-                <li key={item.id}>
-                  <strong>{item.item_name}</strong>
-                  <span className="qty">Qty: {item.quantity}</span>
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
-      </div>
-    </div>
+      </Modal>
+
+      {/* Reuse Drug Detail Modal for consistent detailed view */}
+      <DrugDetailModal
+        drug={selectedDrug}
+        visible={detailModalVisible}
+        onClose={() => setDetailModalVisible(false)}
+      />
+    </>
   );
 };
 

@@ -76,9 +76,10 @@ const CartPage = () => {
 
         cartItems.forEach(item => {
             const source = item.inventory_items?.indent_source || 'OPD';
-            if (grouped[source]) {
-                grouped[source].push(item);
+            if (!grouped[source]) {
+                grouped[source] = [];
             }
+            grouped[source].push(item);
         });
 
         setGroupedItems(grouped);
@@ -168,7 +169,7 @@ const CartPage = () => {
                 // Title
                 doc.setFontSize(12);
                 doc.setFont(undefined, 'bold');
-                const title = `BORANG PERMOHONAN STOK UBAT (SUBSTOR ${source})`;
+                const title = `BORANG PERMOHONAN STOK UBAT (${source})`;
                 doc.text(title, pageWidth / 2, yPosition, { align: 'center' });
                 yPosition += 10;
 
@@ -184,7 +185,7 @@ const CartPage = () => {
                 autoTable(doc, {
                     startY: yPosition,
                     head: [[
-                        { content: 'No Kod', styles: { halign: 'center' } },
+                        { content: 'Bil', styles: { halign: 'center' } },
                         { content: 'Perihal stok', styles: { halign: 'center' } },
                         { content: 'Kuantiti', styles: { halign: 'center' } },
                         { content: 'Catatan', styles: { halign: 'center' } },

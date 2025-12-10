@@ -16,6 +16,7 @@ import {
 import { EnvironmentOutlined, EditOutlined, FormOutlined } from '@ant-design/icons';
 import { supabase } from '../../lib/supabase';
 import { getTypeColor } from '../../lib/colorMappings';
+import { getSourceColor } from '../../lib/colorMappings';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -169,7 +170,7 @@ const IndentModal = ({ drug, visible, onClose, onSuccess }) => {
                             {drug.name}
                         </Title>
                         <Space>
-                            <Tag color={getTypeColor(drug.type)}>{drug.type}</Tag>
+                            <Tag color={getSourceColor(drug.indent_source)}>{drug.indent_source}</Tag>
                             <Space size="small">
                                 <EnvironmentOutlined style={{ color: '#1890ff' }} />
                                 <Text type="secondary">{drug.location_code}</Text>

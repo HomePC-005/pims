@@ -63,7 +63,7 @@ const DrugDetailModal = ({ drug, visible, onClose }) => {
                 {/* Details */}
                 <Descriptions bordered column={1}>
                     <Descriptions.Item label={<><EnvironmentOutlined /> Location</>}>
-                        <Text strong>{drug.location_code}</Text>
+                        <Text strong style={{ fontSize: '16px' }}>{drug.location_code}</Text>
                         <br />
                         <Text type="secondary" style={{ fontSize: '12px' }}>
                             Section: {drug.section} | Row: {drug.row} | Bin: {drug.bin}

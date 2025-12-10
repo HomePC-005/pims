@@ -16,7 +16,7 @@ const DrugCard = ({ drug, onClick }) => {
                     <img
                         alt={drug.name}
                         src={drug.image_url}
-                        style={{ height: 200, objectFit: 'cover' }}
+                        style={{ height: 200, objectFit: 'contain', backgroundColor: '#f5f5f5' }}
                     />
                 ) : (
                     <div

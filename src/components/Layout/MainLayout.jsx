@@ -22,7 +22,7 @@ const MainLayout = () => {
         {
             key: '/locator',
             icon: <SearchOutlined />,
-            label: 'Locator',
+            label: 'Katalog',
         },
         {
             key: '/indent',

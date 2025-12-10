@@ -31,7 +31,7 @@ const LocatorPage = () => {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
-    const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+    const [viewMode, setViewMode] = useState('list'); // 'grid' or 'list'
     const [selectedDrug, setSelectedDrug] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
@@ -61,7 +61,41 @@ const LocatorPage = () => {
 
             if (error) throw error;
 
-            setDrugs(data || []);
+            const sortOrder = [
+                'OPD',
+                'Eye/Ear/Nose/Inh',
+                'DDA',
+                'External',
+                'Injection',
+                'Syrup',
+                'Others',
+                'UOD'
+            ];
+
+            const sortedData = (data || []).sort((a, b) => {
+                const typeA = a.type || '';
+                const typeB = b.type || '';
+
+                const indexA = sortOrder.indexOf(typeA);
+                const indexB = sortOrder.indexOf(typeB);
+
+                // If both types are in our list, sort by index
+                if (indexA !== -1 && indexB !== -1) {
+                    if (indexA !== indexB) return indexA - indexB;
+                    // If same type, sort by name
+                    return a.name.localeCompare(b.name);
+                }
+
+                // If only one is in the list, put it first
+                if (indexA !== -1) return -1;
+                if (indexB !== -1) return 1;
+
+                // If neither are in the list, sort by type then name
+                if (typeA !== typeB) return typeA.localeCompare(typeB);
+                return a.name.localeCompare(b.name);
+            });
+
+            setDrugs(sortedData);
         } catch (error) {
             console.error('Error fetching drugs:', error);
             message.error('Failed to load inventory items');
@@ -112,9 +146,9 @@ const LocatorPage = () => {
             <Space direction="vertical" size="large" style={{ width: '100%' }}>
                 {/* Header */}
                 <div>
-                    <Title level={3}>Drug Locator</Title>
+                    <Title level={3}>Katalog Farmasi ED</Title>
                     <Text type="secondary">
-                        Search and locate drugs in the pharmacy inventory
+                        Search for drug locations in Farmasi ED
                     </Text>
                 </div>
 
@@ -259,7 +293,7 @@ const LocatorPage = () => {
                                             </Space>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                                                 <EnvironmentOutlined style={{ color: '#1890ff', fontSize: '12px' }} />
-                                                <Text type="secondary" style={{ fontSize: '12px' }}>
+                                                <Text strong style={{ fontSize: '12px' }}>
                                                     {drug.location_code}
                                                 </Text>
                                             </div>
@@ -287,7 +321,8 @@ const LocatorPage = () => {
                                                 src={drug.image_url}
                                                 style={{
                                                     borderRadius: 4,
-                                                    objectFit: 'cover',
+                                                    objectFit: 'contain',
+                                                    backgroundColor: '#f5f5f5',
                                                     flexShrink: 0
                                                 }}
                                             />

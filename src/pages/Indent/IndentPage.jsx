@@ -9,8 +9,18 @@ import {
     Typography,
     message,
     Pagination,
+    Input,
+    List,
+    Tag,
 } from 'antd';
+import {
+    SearchOutlined,
+    AppstoreOutlined,
+    UnorderedListOutlined,
+    EnvironmentOutlined,
+} from '@ant-design/icons';
 import { supabase } from '../../lib/supabase';
+import { getTypeColor, getSourceColor } from '../../lib/colorMappings';
 import DrugCard from '../../components/DrugCard';
 import IndentModal from './IndentModal';
 
@@ -25,16 +35,18 @@ const IndentPage = () => {
     const [sections, setSections] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(24);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
 
     useEffect(() => {
         fetchDrugs();
         setupRealtimeSubscription();
     }, []);
 
-    // Reset to first page when section changes
+    // Reset to first page when section changes or search query changes
     useEffect(() => {
         setCurrentPage(1);
-    }, [selectedSection]);
+    }, [selectedSection, searchQuery]);
 
     const fetchDrugs = async () => {
         try {
@@ -85,11 +97,25 @@ const IndentPage = () => {
 
     // Memoize filtered drugs to prevent unnecessary recalculations
     const filteredDrugs = useMemo(() => {
-        if (selectedSection === 'ALL') {
-            return drugs;
+        let result = drugs;
+
+        // Filter by section
+        if (selectedSection !== 'ALL') {
+            result = result.filter(drug => drug.section === selectedSection);
         }
-        return drugs.filter(drug => drug.section === selectedSection);
-    }, [selectedSection, drugs]);
+
+        // Filter by search query
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            result = result.filter(drug =>
+                drug.name?.toLowerCase().includes(query) ||
+                drug.generic_name?.toLowerCase().includes(query) ||
+                drug.location_code?.toLowerCase().includes(query)
+            );
+        }
+
+        return result;
+    }, [selectedSection, searchQuery, drugs]);
 
     // Memoize paginated drugs
     const paginatedDrugs = useMemo(() => {
@@ -147,6 +173,31 @@ const IndentPage = () => {
                     ))}
                 </Space>
 
+                {/* Search Bar and View Toggle */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+                    <Input
+                        placeholder="Search by name, generic name, or location..."
+                        prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        allowClear
+                        size="large"
+                        style={{ flex: '1 1 300px', minWidth: '200px' }}
+                    />
+                    <Space>
+                        <Button
+                            type={viewMode === 'grid' ? 'primary' : 'default'}
+                            icon={<AppstoreOutlined />}
+                            onClick={() => setViewMode('grid')}
+                        />
+                        <Button
+                            type={viewMode === 'list' ? 'primary' : 'default'}
+                            icon={<UnorderedListOutlined />}
+                            onClick={() => setViewMode('list')}
+                        />
+                    </Space>
+                </div>
+
                 {/* Results Count */}
                 {!loading && (
                     <Text type="secondary">
@@ -171,8 +222,8 @@ const IndentPage = () => {
                     <Empty description="No drugs in this section" />
                 )}
 
-                {/* Drug Grid */}
-                {!loading && filteredDrugs.length > 0 && (
+                {/* Grid View */}
+                {!loading && filteredDrugs.length > 0 && viewMode === 'grid' && (
                     <>
                         <Row gutter={[16, 16]}>
                             {paginatedDrugs.map((drug) => (
@@ -194,6 +245,110 @@ const IndentPage = () => {
                             />
                         </div>
                     </>
+                )}
+
+                {/* List View */}
+                {!loading && filteredDrugs.length > 0 && viewMode === 'list' && (
+                    <List
+                        grid={{
+                            gutter: 16,
+                            xs: 1,
+                            sm: 1,
+                            md: 2,
+                            lg: 2,
+                            xl: 3,
+                            xxl: 3,
+                        }}
+                        dataSource={filteredDrugs}
+                        pagination={{
+                            current: currentPage,
+                            pageSize: pageSize,
+                            total: filteredDrugs.length,
+                            onChange: handlePageChange,
+                            onShowSizeChange: handlePageChange,
+                            showSizeChanger: true,
+                            showTotal: (total) => `Total ${total} items`,
+                            pageSizeOptions: ['12', '24', '48', '96'],
+                        }}
+                        renderItem={(drug) => (
+                            <List.Item style={{ marginBottom: 0 }}>
+                                <div
+                                    style={{
+                                        cursor: 'pointer',
+                                        padding: '12px',
+                                        border: '1px solid #f0f0f0',
+                                        borderRadius: '8px',
+                                        transition: 'all 0.3s',
+                                        height: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                    }}
+                                    onClick={() => handleDrugClick(drug)}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.borderColor = '#1890ff';
+                                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.borderColor = '#f0f0f0';
+                                        e.currentTarget.style.boxShadow = 'none';
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <Text strong style={{ fontSize: '14px', display: 'block', marginBottom: '8px' }}>
+                                                {drug.name}
+                                            </Text>
+                                            <Space wrap size={[4, 4]} style={{ marginBottom: '8px' }}>
+                                                <Tag color={getTypeColor(drug.type)} style={{ margin: 0, fontSize: '11px' }}>
+                                                    {drug.type}
+                                                </Tag>
+                                                {drug.indent_source && (
+                                                    <Tag color={getSourceColor(drug.indent_source)} style={{ margin: 0, fontSize: '11px' }}>
+                                                        {drug.indent_source}
+                                                    </Tag>
+                                                )}
+                                            </Space>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                                                <EnvironmentOutlined style={{ color: '#1890ff', fontSize: '12px' }} />
+                                                <Text strong style={{ fontSize: '12px' }}>
+                                                    {drug.location_code}
+                                                </Text>
+                                            </div>
+                                            {drug.remarks && (
+                                                <Text
+                                                    type="secondary"
+                                                    style={{
+                                                        fontSize: '11px',
+                                                        display: 'block',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        whiteSpace: 'nowrap'
+                                                    }}
+                                                    title={drug.remarks}
+                                                >
+                                                    {drug.remarks}
+                                                </Text>
+                                            )}
+                                        </div>
+                                        {drug.image_url && (
+                                            <img
+                                                width={60}
+                                                height={60}
+                                                alt={drug.name}
+                                                src={drug.image_url}
+                                                style={{
+                                                    borderRadius: 4,
+                                                    objectFit: 'contain',
+                                                    backgroundColor: '#f5f5f5',
+                                                    flexShrink: 0
+                                                }}
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                            </List.Item>
+                        )}
+                    />
                 )}
             </Space>
 

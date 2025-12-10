@@ -23,13 +23,14 @@ import { supabase } from '../../lib/supabase';
 import { getTypeColor, getSourceColor } from '../../lib/colorMappings';
 import DrugCard from '../../components/DrugCard';
 import IndentModal from './IndentModal';
+import DebouncedSearchInput from '../../components/DebouncedSearchInput';
 
 const { Title, Text } = Typography;
 
 const IndentPage = () => {
     const [drugs, setDrugs] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [selectedSection, setSelectedSection] = useState('A'); // 'ALL' or a specific section
+    const [selectedSection, setSelectedSection] = useState('ALL'); // 'ALL' or a specific section
     const [selectedDrug, setSelectedDrug] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [sections, setSections] = useState([]);
@@ -175,11 +176,10 @@ const IndentPage = () => {
 
                 {/* Search Bar and View Toggle */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-                    <Input
+                    <DebouncedSearchInput
                         placeholder="Search by name, generic name, or location..."
                         prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onSearch={setSearchQuery}
                         allowClear
                         size="large"
                         style={{ flex: '1 1 300px', minWidth: '200px' }}

@@ -7,6 +7,7 @@ import {
     FileTextOutlined,
     SettingOutlined,
     MenuOutlined,
+    PushpinOutlined,
 } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
@@ -23,6 +24,11 @@ const MainLayout = () => {
             key: '/locator',
             icon: <SearchOutlined />,
             label: 'Katalog',
+        },
+        {
+            key: '/floorplan',
+            icon: <PushpinOutlined />,
+            label: 'Floorplan',
         },
         {
             key: '/indent',

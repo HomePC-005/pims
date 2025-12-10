@@ -23,6 +23,7 @@ import { supabase } from '../../lib/supabase';
 import { getTypeColor, getSourceColor } from '../../lib/colorMappings';
 import DrugCard from '../../components/DrugCard';
 import DrugDetailModal from './DrugDetailModal';
+import DebouncedSearchInput from '../../components/DebouncedSearchInput';
 
 const { Title, Text } = Typography;
 
@@ -30,7 +31,6 @@ const LocatorPage = () => {
     const [drugs, setDrugs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState('list'); // 'grid' or 'list'
     const [selectedDrug, setSelectedDrug] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
@@ -41,15 +41,10 @@ const LocatorPage = () => {
         fetchDrugs();
     }, []);
 
-    // Debounce search query to reduce filtering operations
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedSearchQuery(searchQuery);
-            setCurrentPage(1); // Reset to first page on new search
-        }, 300); // 300ms delay
-
-        return () => clearTimeout(timer);
-    }, [searchQuery]);
+    const handleSearch = (value) => {
+        setSearchQuery(value);
+        setCurrentPage(1); // Reset to first page on new search
+    };
 
     const fetchDrugs = async () => {
         try {
@@ -106,11 +101,11 @@ const LocatorPage = () => {
 
     // Memoize filtered drugs to prevent unnecessary recalculations
     const filteredDrugs = useMemo(() => {
-        if (!debouncedSearchQuery.trim()) {
+        if (!searchQuery.trim()) {
             return drugs;
         }
 
-        const query = debouncedSearchQuery.toLowerCase();
+        const query = searchQuery.toLowerCase();
         return drugs.filter(
             (drug) =>
                 drug.name.toLowerCase().includes(query) ||
@@ -118,7 +113,7 @@ const LocatorPage = () => {
                 drug.location_code?.toLowerCase().includes(query) ||
                 drug.remarks?.toLowerCase().includes(query)
         );
-    }, [debouncedSearchQuery, drugs]);
+    }, [searchQuery, drugs]);
 
     // Memoize paginated drugs for grid view
     const paginatedDrugs = useMemo(() => {
@@ -154,11 +149,10 @@ const LocatorPage = () => {
 
                 {/* Search and View Toggle */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-                    <Input
+                    <DebouncedSearchInput
                         placeholder="Search by name, type, location, or remarks..."
                         prefix={<SearchOutlined />}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onSearch={handleSearch}
                         style={{ flex: '1 1 300px', minWidth: '200px' }}
                         allowClear
                     />

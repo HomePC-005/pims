@@ -1,0 +1,134 @@
+/* Container for the map */
+.map-wrapper {
+    position: relative;
+    /* Essential for absolute positioning of children */
+    width: 100%;
+    max-width: 1000px;
+    /* Adjust based on your screen size needs */
+    margin: 0 auto;
+    border: 2px solid #333;
+}
+
+.map-image {
+    width: 100%;
+    display: block;
+}
+
+/* The clickable rectangular areas */
+.cabinet-zone {
+    position: absolute;
+    cursor: pointer;
+    background-color: rgba(255, 0, 0, 0);
+    /* Slight green tint to debug, set alpha to 0 for invisible */
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* HOVER EFFECT: This creates the outline you wanted */
+.cabinet-zone:hover {
+    border: 3px solid #ff4500;
+    /* Orange-Red highlight */
+    background-color: rgba(255, 69, 0, 0.2);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.zone-label {
+    color: white;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px black;
+    opacity: 0;
+    /* Hidden by default */
+}
+
+.cabinet-zone:hover .zone-label {
+    opacity: 0;
+    /* Hide label on hover */
+}
+
+/* --- MODAL STYLES --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 600px;
+    max-width: 90%;
+    min-height: 400px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.modal-body {
+    display: flex;
+    gap: 20px;
+}
+
+/* The Shelf visualization */
+.shelf-tower {
+    width: 30%;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.shelf-row {
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.shelf-row:hover {
+    background: #e0e0e0;
+}
+
+.shelf-row.active {
+    background: #007bff;
+    color: white;
+}
+
+.items-display {
+    flex: 1;
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 4px;
+}
+
+.item-list {
+    list-style: none;
+    padding: 0;
+}
+
+.item-list li {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+}
+
+.qty {
+    color: #666;
+    font-size: 0.9em;
+}

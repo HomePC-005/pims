@@ -6,6 +6,7 @@ import LocatorPage from './pages/Locator/LocatorPage';
 import IndentPage from './pages/Indent/IndentPage';
 import CartPage from './pages/Cart/CartPage';
 import SettingsPage from './pages/Settings/SettingsPage';
+import FloorPlanApp from './pages/Floorplan/FloorPlanApp';
 
 function App() {
     return (
@@ -23,6 +24,7 @@ function App() {
                     <Route path="/" element={<MainLayout />}>
                         <Route index element={<Navigate to="/locator" replace />} />
                         <Route path="locator" element={<LocatorPage />} />
+                        <Route path="floorplan" element={<FloorPlanApp />} />
                         <Route path="indent" element={<IndentPage />} />
                         <Route path="cart" element={<CartPage />} />
                         <Route path="settings" element={<SettingsPage />} />

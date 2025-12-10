@@ -348,7 +348,7 @@ const IndentModal = ({ drug, visible, onClose, onSuccess }) => {
                         <Form.Item
                             name="bin"
                             label="Bin"
-                            rules={[{ required: true, message: 'Required' }]}
+                            rules={[{ required: false, message: 'Required' }]}
                         >
                             <Input placeholder="e.g., 1" style={{ width: 100 }} />
                         </Form.Item>

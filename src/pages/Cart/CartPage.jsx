@@ -273,14 +273,11 @@ const CartPage = () => {
                 // Create worksheet data
                 const wsData = [
                     // Header row
-                    ['Drug Name', 'Type', 'Location', 'Quantity', 'Remarks'],
+                    ['Drug Name', 'Quantity'],
                     // Data rows
                     ...items.map(item => [
                         item.inventory_items?.name || '',
-                        item.inventory_items?.type || '',
-                        item.inventory_items?.location_code || '',
                         item.requested_qty || 0,
-                        item.inventory_items?.remarks || ''
                     ])
                 ];
 
@@ -290,10 +287,7 @@ const CartPage = () => {
                 // Set column widths
                 ws['!cols'] = [
                     { wch: 30 }, // Drug Name
-                    { wch: 15 }, // Type
-                    { wch: 12 }, // Location
-                    { wch: 10 }, // Quantity
-                    { wch: 40 }  // Remarks
+                    { wch: 15 }, // Quantity
                 ];
 
                 // Add worksheet to workbook

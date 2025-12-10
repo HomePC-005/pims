@@ -29,14 +29,14 @@ const { Title, Text } = Typography;
 const IndentPage = () => {
     const [drugs, setDrugs] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [selectedSection, setSelectedSection] = useState('ALL');
+    const [selectedSection, setSelectedSection] = useState('A'); // 'ALL' or a specific section
     const [selectedDrug, setSelectedDrug] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [sections, setSections] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(24);
     const [searchQuery, setSearchQuery] = useState('');
-    const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+    const [viewMode, setViewMode] = useState('list'); // 'grid' or 'list'
 
     useEffect(() => {
         fetchDrugs();
@@ -356,7 +356,12 @@ const IndentPage = () => {
             <IndentModal
                 drug={selectedDrug}
                 visible={modalVisible}
-                onClose={() => setModalVisible(false)}
+                onClose={(shouldRefresh) => {
+                    setModalVisible(false);
+                    if (shouldRefresh) {
+                        fetchDrugs();
+                    }
+                }}
                 onSuccess={handleIndentSuccess}
             />
         </div>
@@ -364,3 +369,4 @@ const IndentPage = () => {
 };
 
 export default IndentPage;
+

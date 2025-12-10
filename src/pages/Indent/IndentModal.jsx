@@ -27,15 +27,17 @@ const IndentModal = ({ drug, visible, onClose, onSuccess }) => {
     const [loading, setLoading] = useState(false);
     const [minQty, setMinQty] = useState(null);
     const [maxQty, setMaxQty] = useState(null);
+    const [indentSource, setIndentSource] = useState(null);
     const [hasChanges, setHasChanges] = useState(false);
     const [editModalVisible, setEditModalVisible] = useState(false);
     const quantityInputRef = useRef(null);
 
-    // Initialize min/max qty when drug changes
+    // Initialize state when drug changes
     useEffect(() => {
         if (drug) {
             setMinQty(drug.min_qty);
             setMaxQty(drug.max_qty);
+            setIndentSource(drug.indent_source);
             setHasChanges(false);
         }
     }, [drug]);
@@ -64,7 +66,12 @@ const IndentModal = ({ drug, visible, onClose, onSuccess }) => {
         setHasChanges(true);
     };
 
-    const saveMinMaxQty = async () => {
+    const handleIndentSourceChange = (value) => {
+        setIndentSource(value);
+        setHasChanges(true);
+    };
+
+    const saveQuickUpdates = async () => {
         if (!hasChanges) return;
 
         try {
@@ -73,30 +80,32 @@ const IndentModal = ({ drug, visible, onClose, onSuccess }) => {
                 .update({
                     min_qty: minQty,
                     max_qty: maxQty,
+                    indent_source: indentSource,
                 })
                 .eq('id', drug.id);
 
             if (error) throw error;
 
-            message.success('Min/Max quantities updated');
+            message.success('Item details updated');
             setHasChanges(false);
         } catch (error) {
-            console.error('Error updating min/max qty:', error);
-            message.error('Failed to update min/max quantities');
+            console.error('Error updating item details:', error);
+            message.error('Failed to update item details');
         }
     };
 
     const handleClose = async () => {
-        await saveMinMaxQty();
-        onClose();
+        const shouldRefresh = hasChanges;
+        await saveQuickUpdates();
+        onClose(shouldRefresh);
     };
 
     const handleSubmit = async (values) => {
         try {
             setLoading(true);
 
-            // Save min/max qty changes first
-            await saveMinMaxQty();
+            // Save quick updates first
+            await saveQuickUpdates();
 
             const { error } = await supabase
                 .from('indent_requests')
@@ -188,15 +197,15 @@ const IndentModal = ({ drug, visible, onClose, onSuccess }) => {
                     {/* Editable Stock Info */}
                     <div style={{ textAlign: 'center' }}>
                         <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                            <Text strong>Stock Levels</Text>
                             <EditOutlined style={{ fontSize: 12, color: '#1890ff' }} />
+                            <Text strong>Quick Edit Stock</Text>
                             {hasChanges && (
                                 <Text type="warning" style={{ fontSize: 12 }}>
                                     (unsaved changes)
                                 </Text>
                             )}
                         </div>
-                        <Space size="large">
+                        <Space size="large" wrap style={{ justifyContent: 'center' }}>
                             <div>
                                 <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
                                     Min Qty
@@ -206,7 +215,7 @@ const IndentModal = ({ drug, visible, onClose, onSuccess }) => {
                                     onChange={handleMinQtyChange}
                                     min={0}
                                     placeholder="Min"
-                                    style={{ width: 100 }}
+                                    style={{ width: 90 }}
                                 />
                             </div>
                             <div>
@@ -218,8 +227,28 @@ const IndentModal = ({ drug, visible, onClose, onSuccess }) => {
                                     onChange={handleMaxQtyChange}
                                     min={0}
                                     placeholder="Max"
-                                    style={{ width: 100 }}
+                                    style={{ width: 90 }}
                                 />
+                            </div>
+                            <div>
+                                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+                                    Indent From
+                                </Text>
+                                <Select
+                                    value={indentSource}
+                                    onChange={handleIndentSourceChange}
+                                    style={{ width: 130 }}
+                                    placeholder="Select"
+                                    size="middle"
+                                >
+                                    <Select.Option value="OPD Counter">OPD Counter</Select.Option>
+                                    <Select.Option value="OPD Substore">OPD Substore</Select.Option>
+                                    <Select.Option value="IPD Counter">IPD Counter</Select.Option>
+                                    <Select.Option value="MNF Substor">MNF Substor</Select.Option>
+                                    <Select.Option value="Manufact">Manufact</Select.Option>
+                                    <Select.Option value="Prepacking">Prepacking</Select.Option>
+                                    <Select.Option value="IPD Substore">IPD Substore</Select.Option>
+                                </Select>
                             </div>
                         </Space>
                     </div>

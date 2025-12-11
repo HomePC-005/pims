@@ -69,12 +69,31 @@ const MainLayout = () => {
                 }}
                 className="desktop-sider"
             >
-                <div style={{ padding: '16px', textAlign: 'center' }}>
-                    <Title level={4} style={{ color: 'white', margin: 0 }}>
-                        PIMS
+                <div style={{ padding: '24px 16px', textAlign: 'center', background: 'linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%)', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <Title level={4} style={{
+                        color: 'white',
+                        margin: 0,
+                        letterSpacing: '6px',
+                        fontWeight: 300,
+                        background: 'linear-gradient(to right, #4facfe 0%, #00f2fe 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        textTransform: 'uppercase',
+                        fontSize: '24px',
+                        fontFamily: "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+                    }}>
+                        EPIX
                     </Title>
-                    <Typography.Text style={{ color: 'rgba(255,255,255,0.65)', fontSize: '12px' }}>
-                        Hospital Segamat
+                    <Typography.Text style={{
+                        color: 'rgba(255,255,255,0.5)',
+                        fontSize: '10px',
+                        letterSpacing: '1.5px',
+                        textTransform: 'uppercase',
+                        display: 'block',
+                        marginTop: '4px',
+                        fontWeight: 400
+                    }}>
+                        ED Pharmacy<br />Inventory eXchange
                     </Typography.Text>
                 </div>
                 <Menu
@@ -89,10 +108,30 @@ const MainLayout = () => {
             {/* Mobile Drawer */}
             <Drawer
                 title={
-                    <div>
-                        <Title level={4} style={{ margin: 0 }}>PIMS</Title>
-                        <Typography.Text type="secondary" style={{ fontSize: '12px' }}>
-                            Hospital Segamat
+                    <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                        <Title level={4} style={{
+                            margin: 0,
+                            letterSpacing: '6px',
+                            fontWeight: 300,
+                            background: 'linear-gradient(to right, #4facfe 0%, #00f2fe 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            textTransform: 'uppercase',
+                            fontSize: '24px',
+                            fontFamily: "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+                        }}>
+                            EPIX
+                        </Title>
+                        <Typography.Text style={{
+                            color: 'rgba(0,0,0,0.45)',
+                            fontSize: '10px',
+                            letterSpacing: '1.5px',
+                            textTransform: 'uppercase',
+                            display: 'block',
+                            marginTop: '4px',
+                            fontWeight: 400
+                        }}>
+                            ED Pharmacy<br />Inventory eXchange
                         </Typography.Text>
                     </div>
                 }

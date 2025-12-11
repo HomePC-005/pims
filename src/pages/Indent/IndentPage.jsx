@@ -54,12 +54,39 @@ const IndentPage = () => {
             setLoading(true);
             const { data, error } = await supabase
                 .from('inventory_items')
-                .select('*')
-                .order('section', { ascending: true })
-                .order('row', { ascending: true })
-                .order('bin', { ascending: true });
+                .select('*');
 
             if (error) throw error;
+
+            if (data) {
+                data.sort((a, b) => {
+                    // 1️⃣ Natural sort for section
+                    const secA = a.section.replace(/[0-9]/g, '');
+                    const secB = b.section.replace(/[0-9]/g, '');
+                    if (secA !== secB) return secA.localeCompare(secB);
+
+                    const secNumA = parseInt(a.section.replace(/[^0-9]/g, '')) || 0;
+                    const secNumB = parseInt(b.section.replace(/[^0-9]/g, '')) || 0;
+                    if (secNumA !== secNumB) return secNumA - secNumB;
+
+                    // 2️⃣ Natural sort for row
+                    const rowA = a.row.toString().replace(/[A-Za-z]/g, '');
+                    const rowB = b.row.toString().replace(/[A-Za-z]/g, '');
+                    if (!isNaN(rowA) && !isNaN(rowB) && rowA !== rowB) {
+                        return Number(rowA) - Number(rowB);
+                    }
+
+                    // 3️⃣ Natural sort for bin (M1, M2, M10)
+                    const binPrefixA = a.bin.replace(/[0-9]/g, '');
+                    const binPrefixB = b.bin.replace(/[0-9]/g, '');
+                    if (binPrefixA !== binPrefixB) return binPrefixA.localeCompare(binPrefixB);
+
+                    const binNumA = parseInt(a.bin.replace(/[^0-9]/g, ''));
+                    const binNumB = parseInt(b.bin.replace(/[^0-9]/g, ''));
+                    return binNumA - binNumB;
+                });
+            }
+
 
             setDrugs(data || []);
 

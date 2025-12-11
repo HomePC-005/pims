@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Row, Col, Typography, Spin, Empty, Button, message, Segmented } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Modal, Row, Col, Typography, Spin, Empty, Button, message } from 'antd';
 import { supabase } from '../../lib/supabase';
-import DrugCard from '../../components/DrugCard';
+import DrugCard from '../../components/DrugCard2';
 import DrugDetailModal from '../Locator/DrugDetailModal'; // Reuse existing detail modal if needed
+import IndentModal from '../Indent/IndentModal';
 import './FloorPlan.css';
 
 const { Title, Text } = Typography;
@@ -10,6 +11,7 @@ const { Title, Text } = Typography;
 const FloorPlanApp = () => {
   const [selectedCabinet, setSelectedCabinet] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const cabinets = [
     // --- Kaunter Depan ---
@@ -36,6 +38,11 @@ const FloorPlanApp = () => {
     { id: 'Fr', top: '75%', left: '4.5%', width: '7%', height: '9%' },
   ];
 
+  const handleIndentSuccess = useCallback(() => {
+    setModalVisible(false);
+    message.success('Item added to cart successfully!');
+  }, []);
+
   const handleCabinetClick = (cabId) => {
     setSelectedCabinet(cabId);
     setIsModalVisible(true);
@@ -45,6 +52,8 @@ const FloorPlanApp = () => {
     setIsModalVisible(false);
     setSelectedCabinet(null);
   };
+
+
 
   return (
     <div className="app-container">
@@ -85,42 +94,85 @@ const FloorPlanApp = () => {
 
 // --- Sub-Component: The Popup Modal ---
 const CabinetModal = ({ cabinetId, visible, onClose }) => {
-  const [selectedRow, setSelectedRow] = useState(1);
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [rows, setRows] = useState([]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [rowsLoading, setRowsLoading] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const [selectedDrug, setSelectedDrug] = useState(null);
 
-  // Available rows - could be fetched dynamically, but hardcoded 1-6 for now as per likely requirement
-  const rows = [1, 2, 3, 4, 5, 6];
+  // Fetch available rows for the cabinet
+  const fetchRows = async () => {
+    if (!cabinetId) return;
+    setRowsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('inventory_items')
+        .select('row')
+        .eq('section', cabinetId);
+
+      if (error) throw error;
+
+      // Extract unique row numbers and sort them (Descending: Highest on top)
+      const uniqueRows = [...new Set(data.map(item => item.row).filter(r => r !== null))].sort((a, b) => b - a);
+      setRows(uniqueRows);
+
+      // Select first row by default if available
+      if (uniqueRows.length > 0) {
+        setSelectedRow(uniqueRows[0]);
+      } else {
+        setSelectedRow(null);
+      }
+    } catch (error) {
+      console.error('Error fetching rows:', error);
+      message.error('Failed to load cabinet rows');
+    } finally {
+      setRowsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (visible && cabinetId) {
-      fetchItems(selectedRow);
+      fetchRows();
     } else {
       // Reset state when closed
       setItems([]);
-      setSelectedRow(1);
+      setRows([]);
+      setSelectedRow(null);
     }
   }, [visible, cabinetId]);
 
   // Fetch items when row changes
   useEffect(() => {
-    if (visible && cabinetId) {
+    if (visible && cabinetId && selectedRow !== null) {
       fetchItems(selectedRow);
     }
-  }, [selectedRow]);
+  }, [selectedRow, visible, cabinetId]);
 
   const fetchItems = async (rowNum) => {
-    if (!cabinetId) return;
+    if (!cabinetId || rowNum === null) return;
 
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('inventory_items')
         .select('*')
-        .eq('section', cabinetId) // User specified: cabinetID matches drug.section
-        .eq('row', rowNum);       // User specified: row matches drug.row
+        .eq('section', cabinetId)
+        .eq('row', rowNum);
+
+      if (data) {
+        data.sort((a, b) => {
+          const prefixA = a.bin.replace(/[0-9]/g, '');
+          const prefixB = b.bin.replace(/[0-9]/g, '');
+          if (prefixA !== prefixB) return prefixA.localeCompare(prefixB);
+
+          const numA = parseInt(a.bin.replace(/[^0-9]/g, ''));
+          const numB = parseInt(b.bin.replace(/[^0-9]/g, ''));
+          return numA - numB;
+        });
+      }
+
 
       if (error) {
         console.error('Error fetching:', error);
@@ -137,13 +189,18 @@ const CabinetModal = ({ cabinetId, visible, onClose }) => {
 
   const handleDrugClick = (drug) => {
     setSelectedDrug(drug);
-    setDetailModalVisible(true);
+    setModalVisible(true);
+  };
+
+  const handleIndentSuccess = () => {
+    setModalVisible(false);
+    message.success('Item added to cart successfully!');
   };
 
   return (
     <>
       <Modal
-        title={<Title level={3}>Cabinet {cabinetId}</Title>}
+        title={<Title level={3}>Rak {cabinetId}</Title>}
         open={visible}
         onCancel={onClose}
         footer={[
@@ -155,20 +212,42 @@ const CabinetModal = ({ cabinetId, visible, onClose }) => {
         centered
         destroyOnClose
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'row', gap: '20px', minHeight: '400px' }}>
 
-          {/* Row Selection */}
-          <div>
-            <Text type="secondary" style={{ marginRight: 10 }}>Select Row:</Text>
-            <Segmented
-              options={rows.map(r => ({ label: `Row ${r}`, value: r }))}
-              value={selectedRow}
-              onChange={setSelectedRow}
-            />
+          {/* Vertical Row Selection */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '60px', borderRight: '1px solid #f0f0f0', paddingRight: '16px' }}>
+            <Title level={5} style={{ marginBottom: '12px', marginTop: 0 }}>Tingkat</Title>
+            {rowsLoading ? (
+              <Spin size="small" />
+            ) : rows.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+                {rows.map(r => (
+                  <Button
+                    key={r}
+                    type={selectedRow === r ? 'primary' : 'default'}
+                    shape="round"
+                    onClick={() => setSelectedRow(r)}
+                    style={{
+                      width: '40px',
+                      height: '40px',
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      fontSize: '16px',
+                      fontWeight: selectedRow === r ? 'bold' : 'normal'
+                    }}
+                  >
+                    {r}
+                  </Button>
+                ))}
+              </div>
+            ) : (
+              <Text type="secondary" italic>N/A</Text>
+            )}
           </div>
 
           {/* Content Area */}
-          <div style={{ minHeight: '300px' }}>
+          <div style={{ flex: 1, overflowY: 'auto', maxHeight: '600px', paddingRight: '8px' }}>
             {loading ? (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}>
                 <Spin size="large" />
@@ -191,11 +270,16 @@ const CabinetModal = ({ cabinetId, visible, onClose }) => {
         </div>
       </Modal>
 
-      {/* Reuse Drug Detail Modal for consistent detailed view */}
-      <DrugDetailModal
+      <IndentModal
         drug={selectedDrug}
-        visible={detailModalVisible}
-        onClose={() => setDetailModalVisible(false)}
+        visible={modalVisible}
+        onClose={(shouldRefresh) => {
+          setModalVisible(false);
+          if (shouldRefresh && selectedRow) {
+            fetchItems(selectedRow);
+          }
+        }}
+        onSuccess={handleIndentSuccess}
       />
     </>
   );

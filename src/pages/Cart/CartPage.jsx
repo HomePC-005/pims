@@ -142,124 +142,134 @@ const CartPage = () => {
         }
     };
 
-    const handleExportToPDF = () => {
-        try {
-            const doc = new jsPDF();
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const pageHeight = doc.internal.pageSize.getHeight();
+        const handleExportToPDF = () => {
+            try {
+                const doc = new jsPDF();
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
 
-            // Loop through each source (IPD, OPD, MFG)
-            Object.entries(groupedItems).forEach(([source, items], sourceIndex) => {
-                if (items.length === 0) return;
+                Object.entries(groupedItems).forEach(([source, items], sourceIndex) => {
+                    if (items.length === 0) return;
 
-                // Add new page for each source after the first
-                if (sourceIndex > 0) {
-                    doc.addPage();
-                }
-
-                let yPosition = 15;
-
-                // Header - Form Reference
-                doc.setFontSize(10);
-                doc.text('AM 6.5 LAMPIRAN B', pageWidth - 15, yPosition, { align: 'right' });
-                yPosition += 5;
-                doc.text('KEWPS-8', pageWidth - 15, yPosition, { align: 'right' });
-                yPosition += 10;
-
-                // Title
-                doc.setFontSize(12);
-                doc.setFont(undefined, 'bold');
-                const title = `BORANG PERMOHONAN STOK UBAT (${source})`;
-                doc.text(title, pageWidth / 2, yPosition, { align: 'center' });
-                yPosition += 10;
-
-                // Table data
-                const tableData = items.map((item, idx) => [
-                    (idx + 1).toString(),
-                    item.inventory_items?.name || '',
-                    item.requested_qty || 0,
-                    '', // Catatan (empty)
-                ]);
-
-                // Create table with pagination
-                autoTable(doc, {
-                    startY: yPosition,
-                    head: [[
-                        { content: 'Bil', styles: { halign: 'center' } },
-                        { content: 'Perihal stok', styles: { halign: 'center' } },
-                        { content: 'Kuantiti', styles: { halign: 'center' } },
-                        { content: 'Catatan', styles: { halign: 'center' } },
-                    ]],
-                    body: tableData,
-                    theme: 'grid',
-                    styles: {
-                        fontSize: 10,
-                        cellPadding: 3,
-                    },
-                    headStyles: {
-                        fillColor: [255, 255, 255],
-                        textColor: [0, 0, 0],
-                        fontStyle: 'bold',
-                        lineWidth: 0.5,
-                        lineColor: [0, 0, 0],
-                    },
-                    bodyStyles: {
-                        lineWidth: 0.5,
-                        lineColor: [0, 0, 0],
-                    },
-                    columnStyles: {
-                        0: { cellWidth: 20, halign: 'center' },
-                        1: { cellWidth: 80 },
-                        2: { cellWidth: 25, halign: 'center' },
-                        3: { cellWidth: 60 },
-                    },
-                    margin: { bottom: 60 }, // Reserve space for signatures
-                    didDrawPage: function (data) {
-                        // Add signature section on every page
-                        const finalY = pageHeight - 50;
-
-                        doc.setFontSize(9);
-                        doc.setFont(undefined, 'normal');
-
-                        // Left section - Pemohon
-                        const leftX = 15;
-                        doc.text('Pemohon', leftX, finalY);
-                        doc.text('(Tandatangan)', leftX, finalY + 15);
-                        doc.text('Nama : Muhd Redzuan', leftX, finalY + 20);
-                        doc.text('Jawatan : Pegawai Farmasi UF48', leftX, finalY + 25);
-                        doc.text('Tarikh :', leftX, finalY + 30);
-
-                        // Middle section - Pegawai Pelulus
-                        const middleX = pageWidth / 2 - 20;
-                        doc.text('Pegawai Pelulus', middleX, finalY);
-                        doc.text('(Tandatangan)', middleX, finalY + 15);
-                        doc.text('Nama :', middleX, finalY + 20);
-                        doc.text('Jawatan :', middleX, finalY + 25);
-                        doc.text('Tarikh :', middleX, finalY + 30);
-
-                        // Right section - Pemohon/Wakil
-                        const rightX = pageWidth - 60;
-                        doc.text('Penerima', rightX, finalY);
-                        doc.text('(Tandatangan)', rightX, finalY + 15);
-                        doc.text('Nama :  ', rightX, finalY + 20);
-                        doc.text('Jawatan :  ', rightX, finalY + 25);
-                        doc.text('Tarikh :', rightX, finalY + 30);
+                    if (sourceIndex > 0) {
+                        doc.addPage();
                     }
+
+                    let yPosition = 15;
+
+                    // Header - Form Reference
+                    doc.setFontSize(8);
+                    doc.setFont(undefined, 'italic');
+                    doc.text('Pekeliling Perbendaharaan Malaysia', 7, yPosition);
+                    doc.setFont(undefined, 'normal');
+                    doc.text('AM 6.5 LAMPIRAN B', pageWidth / 2, yPosition, { align: 'center' });
+                    doc.text('KEW.PS-8', pageWidth - 7, yPosition, { align: 'right' });
+                    yPosition += 10;
+
+                    // Title
+                    doc.setFontSize(12);
+                    doc.setFont(undefined, 'bold');
+                    const title = `BORANG PERMOHONAN STOK UBAT (${source})`;
+                    doc.text(title, pageWidth / 2, yPosition, { align: 'center' });
+                    yPosition += 5;
+
+                    // 1. Updated Table Data mapping (added 2 empty columns)
+                    const tableData = items.map((item, idx) => [
+                        (idx + 1).toString(),
+                        item.inventory_items?.name || '',
+                        item.requested_qty || 0,
+                        '', // Original Catatan (Empty for manual writing)
+                        '', // Kuantiti Diluluskan (Empty for manual writing)
+                        '', // New Catatan (Empty for manual writing)
+                    ]);
+
+                    autoTable(doc, {
+                        startY: yPosition,
+                        head: [[
+                            { content: 'Bil', styles: { halign: 'center' } },
+                            { content: 'Perihal stok', styles: { halign: 'center' } },
+                            { content: 'Kuantiti', styles: { halign: 'center' } },
+                            { content: 'Catatan', styles: { halign: 'center' } },
+                            { content: 'Kuantiti Diluluskan', styles: { halign: 'center' } },
+                            { content: 'Catatan', styles: { halign: 'center' } },
+                        ]],
+                        body: tableData,
+                        theme: 'grid',
+                        styles: {
+                            fontSize: 10, // Slightly smaller font to accommodate more columns
+                            cellPadding: 3,
+                        },
+                        headStyles: {
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            lineWidth: 0.2,
+                            lineColor: [0, 0, 0],
+                        },
+                        bodyStyles: {
+                            lineWidth: 0.2,
+                            lineColor: [0, 0, 0],
+                            minCellHeight: 9, // Added height for manual writing room
+                        },
+                        // 2. Adjusted widths: First 4 cols ~65%, Last 2 cols ~35%
+                        columnStyles: {
+                            0: { cellWidth: 11, halign: 'center' }, // Bil
+                            1: { cellWidth: 78 },                  // Perihal
+                            2: { cellWidth: 29, halign: 'center' }, // Kuantiti
+                            3: { cellWidth: 25 },                  // Catatan (Req)
+                            4: { cellWidth: 29, halign: 'center' }, // Kuantiti Diluluskan
+                            5: { cellWidth: 25 },                  // Catatan (Appr)
+                        },
+                        margin: { bottom: 50, left: 7, right: 7 },
+                        
+                        // 3. Hook to draw the Thick Border
+                        didDrawCell: function (data) {
+                            // Check if this is the 'Kuantiti Diluluskan' column (Index 4)
+                            if (data.column.index === 4) {
+                                doc.setLineWidth(0.8); // Set thick line
+                                doc.line(data.cell.x, data.cell.y, data.cell.x, data.cell.y + data.cell.height);
+                                doc.setLineWidth(0.2); // Reset to default
+                            }
+                        },
+
+                        didDrawPage: function (data) {
+                            const finalY = pageHeight - 50;
+                            doc.setFontSize(9);
+                            doc.setFont(undefined, 'normal');
+
+                            // Footer signatures...
+                            const leftX = 15;
+                            doc.text('Pemohon', leftX, finalY);
+                            doc.text('(Tandatangan)', leftX, finalY + 15);
+                            doc.text('Nama : Muhd Redzuan', leftX, finalY + 20);
+                            doc.text('Jawatan : Pegawai Farmasi UF48', leftX, finalY + 25);
+                            doc.text('Tarikh :', leftX, finalY + 30);
+
+                            const middleX = pageWidth / 2 - 20;
+                            doc.text('Pegawai Pelulus', middleX, finalY);
+                            doc.text('(Tandatangan)', middleX, finalY + 15);
+                            doc.text('Nama :', middleX, finalY + 20);
+                            doc.text('Jawatan :', middleX, finalY + 25);
+                            doc.text('Tarikh :', middleX, finalY + 30);
+
+                            const rightX = pageWidth - 60;
+                            doc.text('Penerima', rightX, finalY);
+                            doc.text('(Tandatangan)', rightX, finalY + 15);
+                            doc.text('Nama :  ', rightX, finalY + 20);
+                            doc.text('Jawatan :  ', rightX, finalY + 25);
+                            doc.text('Tarikh :', rightX, finalY + 30);
+                        }
+                    });
                 });
-            });
 
-            // Generate filename with timestamp
-            const timestamp = new Date().toISOString().split('T')[0];
-            const filename = `Indent_Request_${timestamp}.pdf`;
-
-            // Save PDF
-            doc.save(filename);
-            message.success('PDF exported successfully!');
-        } catch (error) {
-            console.error('Error exporting to PDF:', error);
-            message.error('Failed to export to PDF');
-        }
-    };
+                const timestamp = new Date().toISOString().split('T')[0];
+                doc.save(`Indent_Request_${timestamp}.pdf`);
+                message.success('PDF exported successfully!');
+            } catch (error) {
+                console.error('Error exporting to PDF:', error);
+                message.error('Failed to export to PDF');
+            }
+        };
 
     const handleExportToExcel = () => {
         try {
@@ -480,6 +490,7 @@ const CartPage = () => {
                 title="Edit Quantity"
                 open={editingItem !== null}
                 onOk={handleSaveEdit}
+                centered
                 onCancel={() => setEditingItem(null)}
             >
                 <Space direction="vertical" style={{ width: '100%' }}>

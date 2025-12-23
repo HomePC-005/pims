@@ -121,6 +121,7 @@ const IndentModal = ({ drug, visible, onClose, onSuccess, onDrugUpdate }) => {
 
             message.success('Item details updated');
             setHasChanges(false);
+            onClose(true)
             if (onDrugUpdate) onDrugUpdate();
         } catch (error) {
             console.error('Error updating item details:', error);

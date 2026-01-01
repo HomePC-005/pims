@@ -232,110 +232,130 @@ const CartPage = () => {
                 const doc = new jsPDF();
                 const pageWidth = doc.internal.pageSize.getWidth();
                 const pageHeight = doc.internal.pageSize.getHeight();
-                let yPosition = 15;
 
-                // Header - Form Reference
-                doc.setFontSize(8);
-                doc.setFont(undefined, 'italic');
-                doc.text('Pekeliling Perbendaharaan Malaysia', 7, yPosition);
-                doc.setFont(undefined, 'normal');
-                doc.text('AM 6.5 LAMPIRAN B', pageWidth / 2, yPosition, { align: 'center' });
-                doc.text('KEW.PS-8', pageWidth - 7, yPosition, { align: 'right' });
-                yPosition += 10;
+                // Generate the page twice - once for indenter's copy, once for issuer's copy
+                const copies = ['SALINAN PEMESAN', 'SALINAN PENGELUAR'];
 
-                // Title
-                doc.setFontSize(12);
-                doc.setFont(undefined, 'bold');
-                const title = `BORANG PERMOHONAN STOK UBAT (${source})`;
-                doc.text(title, pageWidth / 2, yPosition, { align: 'center' });
-                yPosition += 5;
+                copies.forEach((copyLabel, copyIndex) => {
+                    if (copyIndex > 0) {
+                        doc.addPage();
+                    }
 
-                // 1. Updated Table Data mapping (added 2 empty columns)
-                const tableData = items.map((item, idx) => [
-                    (idx + 1).toString(),
-                    item.inventory_items?.name || '',
-                    item.requested_qty || 0,
-                    '', // Original Catatan (Empty for manual writing)
-                    '', // Kuantiti Diluluskan (Empty for manual writing)
-                    '', // New Catatan (Empty for manual writing)
-                ]);
+                    let yPosition = 15;
 
-                autoTable(doc, {
-                    startY: yPosition,
-                    head: [[
-                        { content: 'Bil', styles: { halign: 'center' } },
-                        { content: 'Perihal stok', styles: { halign: 'center' } },
-                        { content: 'Kuantiti', styles: { halign: 'center' } },
-                        { content: 'Catatan', styles: { halign: 'center' } },
-                        { content: 'Kuantiti Diluluskan', styles: { halign: 'center' } },
-                        { content: 'Catatan', styles: { halign: 'center' } },
-                    ]],
-                    body: tableData,
-                    theme: 'grid',
-                    styles: {
-                        fontSize: 10, // Slightly smaller font to accommodate more columns
-                        cellPadding: 3,
-                    },
-                    headStyles: {
-                        fillColor: [255, 255, 255],
-                        textColor: [0, 0, 0],
-                        fontStyle: 'bold',
-                        lineWidth: 0.2,
-                        lineColor: [0, 0, 0],
-                    },
-                    bodyStyles: {
-                        lineWidth: 0.2,
-                        lineColor: [0, 0, 0],
-                        minCellHeight: 9, // Added height for manual writing room
-                    },
-                    // 2. Adjusted widths: First 4 cols ~65%, Last 2 cols ~35%
-                    columnStyles: {
-                        0: { cellWidth: 11, halign: 'center' }, // Bil
-                        1: { cellWidth: 78 },                  // Perihal
-                        2: { cellWidth: 29, halign: 'center' }, // Kuantiti
-                        3: { cellWidth: 25 },                  // Catatan (Req)
-                        4: { cellWidth: 29, halign: 'center' }, // Kuantiti Diluluskan
-                        5: { cellWidth: 25 },                  // Catatan (Appr)
-                    },
-                    margin: { bottom: 50, left: 7, right: 7 },
+                    // Set text color to true black for all text
+                    doc.setTextColor(0, 0, 0);
 
-                    // 3. Hook to draw the Thick Border
-                    didDrawCell: function (data) {
-                        // Check if this is the 'Kuantiti Diluluskan' column (Index 4)
-                        if (data.column.index === 4) {
-                            doc.setLineWidth(0.8); // Set thick line
-                            doc.line(data.cell.x, data.cell.y, data.cell.x, data.cell.y + data.cell.height);
-                            doc.setLineWidth(0.2); // Reset to default
-                        }
-                    },
+                    // Copy Label
+                    doc.setFontSize(9);
+                    doc.setFont(undefined, 'bold');
+                    doc.text(copyLabel, pageWidth - 7, yPosition, { align: 'right' });
+                    yPosition += 5;
 
+                    // Header - Form Reference
+                    doc.setFontSize(8);
+                    doc.setFont(undefined, 'italic');
+                    doc.text('Pekeliling Perbendaharaan Malaysia', 7, yPosition);
+                    doc.setFont(undefined, 'normal');
+                    doc.text('AM 6.5 LAMPIRAN B', pageWidth / 2, yPosition, { align: 'center' });
+                    doc.text('KEW.PS-8', pageWidth - 7, yPosition, { align: 'right' });
+                    yPosition += 10;
+
+                    // Title
+                    doc.setFontSize(12);
+                    doc.setFont(undefined, 'bold');
+                    const title = `BORANG PERMOHONAN STOK UBAT (${source})`;
+                    doc.text(title, pageWidth / 2, yPosition, { align: 'center' });
+                    yPosition += 5;
+
+                    // 1. Updated Table Data mapping (added 2 empty columns)
+                    const tableData = items.map((item, idx) => [
+                        (idx + 1).toString(),
+                        item.inventory_items?.name || '',
+                        item.requested_qty || 0,
+                        '', // Original Catatan (Empty for manual writing)
+                        '', // Kuantiti Diluluskan (Empty for manual writing)
+                        '', // New Catatan (Empty for manual writing)
+                    ]);
+
+                    autoTable(doc, {
+                        startY: yPosition,
+                        head: [[
+                            { content: 'Bil', styles: { halign: 'center' } },
+                            { content: 'Perihal stok', styles: { halign: 'center' } },
+                            { content: 'Kuantiti', styles: { halign: 'center' } },
+                            { content: 'Catatan', styles: { halign: 'center' } },
+                            { content: 'Kuantiti Diluluskan', styles: { halign: 'center' } },
+                            { content: 'Catatan', styles: { halign: 'center' } },
+                        ]],
+                        body: tableData,
+                        theme: 'grid',
+                        styles: {
+                            fontSize: 12, // Slightly smaller font to accommodate more columns
+                            cellPadding: 3,
+                        },
+                        headStyles: {
+                            fillColor: [255, 255, 255],
+                            textColor: [0, 0, 0],
+                            fontStyle: 'bold',
+                            lineWidth: 0.2,
+                            lineColor: [0, 0, 0],
+                        },
+                        bodyStyles: {
+                            lineWidth: 0.2,
+                            lineColor: [0, 0, 0],
+                            textColor: [0, 0, 0], // True black text
+                            minCellHeight: 9, // Added height for manual writing room
+                        },
+                        // 2. Adjusted widths: First 4 cols ~65%, Last 2 cols ~35%
+                        columnStyles: {
+                            0: { cellWidth: 12, halign: 'center' }, // Bil
+                            1: { cellWidth: 78 },                  // Perihal
+                            2: { cellWidth: 28, halign: 'center' }, // Kuantiti
+                            3: { cellWidth: 25 },                  // Catatan (Req)
+                            4: { cellWidth: 28, halign: 'center' }, // Kuantiti Diluluskan
+                            5: { cellWidth: 25 },                  // Catatan (Appr)
+                        },
+                        margin: { bottom: 50, left: 7, right: 7 },
+
+                        // 3. Hook to draw the Thick Border
+                        didDrawCell: function (data) {
+                            // Check if this is the 'Kuantiti Diluluskan' column (Index 4)
+                            if (data.column.index === 4) {
+                                doc.setLineWidth(0.8); // Set thick line
+                                doc.line(data.cell.x, data.cell.y, data.cell.x, data.cell.y + data.cell.height);
+                                doc.setLineWidth(0.2); // Reset to default
+                            }
+                        },
+
+                    });
+
+                    // Signatures (Moved outside autoTable to show only on last page)
+                    const finalY = pageHeight - 50;
+                    doc.setFontSize(9);
+                    doc.setFont(undefined, 'normal');
+
+                    const leftX = 15;
+                    doc.text('Pemohon', leftX, finalY);
+                    doc.text('(Tandatangan)', leftX, finalY + 15);
+                    doc.text('Nama : Muhd Redzuan', leftX, finalY + 20);
+                    doc.text('Jawatan : Pegawai Farmasi UF48', leftX, finalY + 25);
+                    doc.text('Tarikh :', leftX, finalY + 30);
+
+                    const middleX = pageWidth / 2 - 20;
+                    doc.text('Pegawai Pelulus', middleX, finalY);
+                    doc.text('(Tandatangan)', middleX, finalY + 15);
+                    doc.text('Nama :', middleX, finalY + 20);
+                    doc.text('Jawatan :', middleX, finalY + 25);
+                    doc.text('Tarikh :', middleX, finalY + 30);
+
+                    const rightX = pageWidth - 60;
+                    doc.text('Penerima', rightX, finalY);
+                    doc.text('(Tandatangan)', rightX, finalY + 15);
+                    doc.text('Nama :  ', rightX, finalY + 20);
+                    doc.text('Jawatan :  ', rightX, finalY + 25);
+                    doc.text('Tarikh :', rightX, finalY + 30);
                 });
-
-                // Signatures (Moved outside autoTable to show only on last page)
-                const finalY = pageHeight - 50;
-                doc.setFontSize(9);
-                doc.setFont(undefined, 'normal');
-
-                const leftX = 15;
-                doc.text('Pemohon', leftX, finalY);
-                doc.text('(Tandatangan)', leftX, finalY + 15);
-                doc.text('Nama : Muhd Redzuan', leftX, finalY + 20);
-                doc.text('Jawatan : Pegawai Farmasi UF48', leftX, finalY + 25);
-                doc.text('Tarikh :', leftX, finalY + 30);
-
-                const middleX = pageWidth / 2 - 20;
-                doc.text('Pegawai Pelulus', middleX, finalY);
-                doc.text('(Tandatangan)', middleX, finalY + 15);
-                doc.text('Nama :', middleX, finalY + 20);
-                doc.text('Jawatan :', middleX, finalY + 25);
-                doc.text('Tarikh :', middleX, finalY + 30);
-
-                const rightX = pageWidth - 60;
-                doc.text('Penerima', rightX, finalY);
-                doc.text('(Tandatangan)', rightX, finalY + 15);
-                doc.text('Nama :  ', rightX, finalY + 20);
-                doc.text('Jawatan :  ', rightX, finalY + 25);
-                doc.text('Tarikh :', rightX, finalY + 30);
 
                 // Save individual file per source
                 const timestamp = new Date().toISOString().split('T')[0];

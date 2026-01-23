@@ -65,6 +65,11 @@ const IndentPage = () => {
 
             if (data) {
                 data.sort((a, b) => {
+                    // Handle null/undefined values
+                    if (!a.section || !b.section) return 0;
+                    if (!a.row || !b.row) return 0;
+                    if (!a.bin || !b.bin) return 0;
+
                     // 1️⃣ Natural sort for section
                     const secA = a.section.replace(/[0-9]/g, '');
                     const secB = b.section.replace(/[0-9]/g, '');
@@ -367,6 +372,7 @@ const IndentPage = () => {
                         columns={columns}
                         dataSource={filteredDrugs}
                         rowKey="id"
+                        showSorterTooltip={false}
                         pagination={{
                             current: currentPage,
                             pageSize: pageSize,

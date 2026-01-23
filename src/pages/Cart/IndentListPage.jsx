@@ -365,9 +365,13 @@ const IndentListPage = () => {
 
                 {/* Date Selector */}
                 <div>
-                    <Text strong style={{ display: 'block', marginBottom: 8 }}>
-                        Select Date:
-                    </Text>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', maxWidth: 300, marginBottom: 8, }}>
+                        <Text strong>Select Date:</Text>
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                            <Badge dot color="#1890ff" /> Dates with indent records
+                        </Text>
+                    </div>
+
                     <div style={{ display: 'flex', gap: '16px', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
                         <DatePicker
                             value={selectedDate}
@@ -388,7 +392,7 @@ const IndentListPage = () => {
                                 size="large"
                                 style={{
                                     backgroundColor: totalItems === 0 ? undefined : '#9c0888ff',
-                                    borderColor: '#9c0888ff',
+                                    borderColor: totalItems === 0 ? '#d6d6d6' : '#9c0888ff',
                                     color: totalItems === 0 ? undefined : '#fff'
                                 }}
                             >
@@ -400,7 +404,7 @@ const IndentListPage = () => {
                                 size="large"
                                 style={{
                                     backgroundColor: totalItems === 0 ? undefined : '#0050b3',
-                                    borderColor: '#0050b3',
+                                    borderColor: totalItems === 0 ? '#d6d6d6' : '#0050b3',
                                     color: totalItems === 0 ? undefined : '#fff'
                                 }}
                             >
@@ -408,11 +412,7 @@ const IndentListPage = () => {
                             </Button>
                         </div>
                     </div>
-                    <div style={{ marginTop: 8 }}>
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                            <Badge dot color="#1890ff" /> Dates with indent records
-                        </Text>
-                    </div>
+
                 </div>
 
 

@@ -575,7 +575,7 @@ const CartPage = () => {
                             size="large"
                             style={{
                                 backgroundColor: totalItems === 0 ? undefined : '#b8008aff ',
-                                borderColor: '#b8008aff ',
+                                borderColor: totalItems === 0 ? '#d6d6d6' : '#b8008aff ',
                                 color: totalItems === 0 ? undefined : '#fff'
                             }}
                         >
@@ -588,7 +588,7 @@ const CartPage = () => {
                             size="large"
                             style={{
                                 backgroundColor: totalItems === 0 ? undefined : '#0050b3 ',
-                                borderColor: '#0050b3 ',
+                                borderColor: totalItems === 0 ? '#d6d6d6' : '#0050b3 ',
                                 color: totalItems === 0 ? undefined : '#fff'
                             }}
                         >
@@ -604,7 +604,7 @@ const CartPage = () => {
                             size="large"
                             style={{
                                 backgroundColor: totalItems === 0 ? undefined : '#cf1322 ',
-                                borderColor: '#cf1322 ',
+                                borderColor: totalItems === 0 ? '#d6d6d6' : '#cf1322 ',
                                 color: totalItems === 0 ? undefined : '#fff'
                             }}
                         >
@@ -627,7 +627,8 @@ const CartPage = () => {
                             return (
                                 <Panel
                                     header={
-                                        <Space onClick={(e) => e.stopPropagation()}>
+                                        <Space>
+                                            <span onClick={(e) => e.stopPropagation()}>
                                             <Checkbox
                                                 checked={selectedSources.includes(source)}
                                                 onChange={(e) => {
@@ -638,6 +639,7 @@ const CartPage = () => {
                                                     );
                                                 }}
                                             />
+                                            </span>
                                             <Tag color={getSourceColor(source)}>{source}</Tag>
                                             <Text>{items.length} {items.length === 1 ? 'item' : 'items'}</Text>
                                         </Space>

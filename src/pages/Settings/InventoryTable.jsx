@@ -278,6 +278,7 @@ const InventoryTable = () => {
             <Table
                 columns={columns}
                 dataSource={filteredDrugs}
+                showSorterTooltip={false}
                 rowKey="id"
                 loading={loading}
                 scroll={{ x: 1200 }}

@@ -436,17 +436,19 @@ const IndentListPage = () => {
                             return (
                                 <Panel
                                     header={
-                                        <Space onClick={(e) => e.stopPropagation()}>
-                                            <Checkbox
-                                                checked={selectedSources.includes(source)}
-                                                onChange={(e) => {
-                                                    const checked = e.target.checked;
-                                                    setSelectedSources(prev => checked
-                                                        ? [...prev, source]
-                                                        : prev.filter(s => s !== source)
-                                                    );
-                                                }}
-                                            />
+                                        <Space>
+                                            <span onClick={(e) => e.stopPropagation()}>
+                                                <Checkbox
+                                                    checked={selectedSources.includes(source)}
+                                                    onChange={(e) => {
+                                                        const checked = e.target.checked;
+                                                        setSelectedSources(prev => checked
+                                                            ? [...prev, source]
+                                                            : prev.filter(s => s !== source)
+                                                        );
+                                                    }}
+                                                />
+                                            </span>
                                             <Tag color={getSourceColor(source)}>{source}</Tag>
                                             <Text>{items.length} {items.length === 1 ? 'item' : 'items'}</Text>
                                         </Space>
@@ -490,11 +492,12 @@ const IndentListPage = () => {
                             );
                         })}
                     </Collapse>
-                )}
-            </Space>
+                )
+                }
+            </Space >
 
             {/* Responsive Styles */}
-            <style>{`
+            < style > {`
                 /* Mobile: responsive adjustments */
 
                 input {
@@ -535,8 +538,8 @@ const IndentListPage = () => {
                 .ant-picker-cell-inner .ant-badge {
                     width: 100%;
                 }
-            `}</style>
-        </div>
+            `}</style >
+        </div >
     );
 };
 

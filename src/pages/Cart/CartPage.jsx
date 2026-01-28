@@ -686,6 +686,7 @@ const CartPage = () => {
                 open={editingItem !== null}
                 onCancel={handleCloseEdit}
                 centered
+                destroyOnHidden
                 width={450}
                 footer={null}
             >
@@ -704,20 +705,34 @@ const CartPage = () => {
                                 <Text type="secondary">{editingItem?.inventory_items?.location_code}</Text>
                             </Space>
                         </Space>
+                        {editRemarks?.length > 0 && (
+                            <div style={{ marginTop: 8, padding: '8px 16px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+                                <Text style={{ fontSize: '14px' }} editable={{ tooltip: 'Edit Remarks', triggerType: 'text' }}>
+                                    {editRemarks}
+                                </Text>
+                            </div>
+                        )}
                     </div>
 
                     {/* Editable Stock Info */}
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                            {hasChanges && (
+                    <div style={{
+                        backgroundColor: '#fafafa',
+                        padding: '16px',
+                        borderRadius: '8px',
+                        border: '1px solid #f0f0f0'
+                    }}>
+                        {hasChanges && (
+                            <div style={{ marginBottom: 12, textAlign: 'center' }}>
                                 <Text type="warning" style={{ fontSize: 12 }}>
-                                    (unsaved changes)
+                                    ⚠ Unsaved changes
                                 </Text>
-                            )}
-                        </div>
-                        <Row gutter={[16, 16]} justify="center">
-                            <Col xs={12} sm={6}>
-                                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+                            </div>
+                        )}
+
+                        {/* Stock Information */}
+                        <Row gutter={[16, 16]}>
+                            <Col span={12}>
+                                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 6 }}>
                                     Min Qty
                                 </Text>
                                 <Input
@@ -725,10 +740,11 @@ const CartPage = () => {
                                     onChange={handleMinQtyChange}
                                     placeholder="Min"
                                     style={{ width: '100%' }}
+                                    size="large"
                                 />
                             </Col>
-                            <Col xs={12} sm={6}>
-                                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+                            <Col span={12}>
+                                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 6 }}>
                                     Max Qty
                                 </Text>
                                 <Input
@@ -736,12 +752,13 @@ const CartPage = () => {
                                     onChange={handleMaxQtyChange}
                                     placeholder="Max"
                                     style={{ width: '100%' }}
+                                    size="large"
                                 />
                             </Col>
                         </Row>
-                        <Row gutter={[16, 16]} justify="center">
-                            <Col xs={24} sm={12}>
-                                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>
+                        <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+                            <Col span={24}>
+                                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 6 }}>
                                     Indent From
                                 </Text>
                                 <Select
@@ -749,7 +766,7 @@ const CartPage = () => {
                                     onChange={handleIndentSourceChange}
                                     style={{ width: '100%' }}
                                     placeholder="Select"
-                                    size="middle"
+                                    size="large"
                                     virtual={false}
                                     open={isIndentSourceDropdownOpen}
                                     onDropdownVisibleChange={(visible) => setIsIndentSourceDropdownOpen(visible)}
@@ -764,16 +781,6 @@ const CartPage = () => {
                                 </Select>
                             </Col>
                         </Row>
-                    </div>
-
-                    {/* Remarks */}
-                    <div>
-                        <Text style={{ display: 'block', marginBottom: 8 }}>
-                            Remarks
-                        </Text>
-                        <Text type="secondary">
-                            {editRemarks || 'No remarks'}
-                        </Text>
                     </div>
 
                     {/* Indent Quantity */}

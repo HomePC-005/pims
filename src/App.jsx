@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider, theme } from 'antd';
 import MainLayout from './components/Layout/MainLayout';
 import LocatorPage from './pages/Catalog/LocatorPage';
+import CatalogIPD from './pages/Catalog/CatalogIPD';
 import IndentPage from './pages/Indent/IndentPage';
 import ShortExpPage from './pages/Shortexp/ShortExpPage';
 import CartPage from './pages/Cart/CartPage';
@@ -28,6 +29,7 @@ function App() {
                 <Route path="/" element={<MainLayout />}>
                     <Route index element={<Navigate to="/catalog" replace />} />
                     <Route path="catalog" element={<LocatorPage />} />
+                    <Route path="catalog-ipd" element={<CatalogIPD />} />
                     <Route path="floorplan" element={<FloorPlanApp />} />
                     <Route path="indent" element={<IndentPage />} />
                     <Route path="shortexp" element={<ShortExpPage />} />

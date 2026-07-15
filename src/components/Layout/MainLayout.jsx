@@ -30,6 +30,11 @@ const MainLayout = () => {
             label: 'Catalog',
         },
         {
+            key: '/catalog-ipd',
+            icon: <SearchOutlined />,
+            label: 'Catalog IPD',
+        },
+        {
             key: '/floorplan',
             icon: <PushpinOutlined />,
             label: 'Floorplan',

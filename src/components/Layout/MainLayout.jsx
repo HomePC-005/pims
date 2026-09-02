@@ -74,6 +74,11 @@ const MainLayout = () => {
             icon: <ExperimentOutlined />,
             label: 'Test',
         },
+        {
+            key: '/test2',
+            icon: <ExperimentOutlined />,
+            label: 'Test2',
+        },
     ];
 
     const handleMenuClick = ({ key }) => {

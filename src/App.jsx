@@ -12,6 +12,7 @@ import SettingsPage from './pages/Settings/SettingsPage';
 import ConfigPage from './pages/Config/ConfigPage';
 import FloorPlanApp from './pages/Floorplan/FloorPlanApp';
 import Test from './pages/Test/Test';
+import Test2 from './pages/Test/Test2';
 
 function App() {
     return (
@@ -38,6 +39,7 @@ function App() {
                     <Route path="settings" element={<SettingsPage />} />
                     <Route path="config" element={<ConfigPage />} />
                     <Route path="test" element={<Test />} />
+                    <Route path="test2" element={<Test2 />} />
                 </Route>
             </Routes>
 

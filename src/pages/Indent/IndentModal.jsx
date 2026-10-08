@@ -127,7 +127,6 @@ const IndentModal = ({ drug, visible, onClose, onSuccess, onDrugUpdate, width = 
 
             message.success('Item details updated');
             setHasChanges(false);
-            onClose(true)
             if (onDrugUpdate) onDrugUpdate();
         } catch (error) {
             console.error('Error updating item details:', error);
@@ -146,7 +145,23 @@ const IndentModal = ({ drug, visible, onClose, onSuccess, onDrugUpdate, width = 
         try {
             setLoading(true);
 
+            if (hasChanges) {
+                const { error: updateError } = await supabase
+                    .from('inventory_items')
+                    .update({
+                        min_qty: minQty,
+                        max_qty: maxQty,
+                        indent_source: indentSource,
+                        is_short_exp: isShortExp,
+                        short_exp: shortExp ? shortExp.format('YYYY-MM-DD') : null,
+                    })
+                    .eq('id', drug.id);
 
+                if (updateError) throw updateError;
+                message.success('Item details updated');
+                setHasChanges(false);
+                if (onDrugUpdate) onDrugUpdate();
+            }
 
             const { error } = await supabase
                 .from('indent_requests')
@@ -161,9 +176,7 @@ const IndentModal = ({ drug, visible, onClose, onSuccess, onDrugUpdate, width = 
             onSuccess();
         } catch (error) {
             console.error('Error adding to cart:', error);
-            if (!error.message?.includes('item details')) {
-                message.error('Failed to add item to cart');
-            }
+            message.error('Failed to add item to cart or update details');
         } finally {
             setLoading(false);
         }
@@ -202,17 +215,13 @@ const IndentModal = ({ drug, visible, onClose, onSuccess, onDrugUpdate, width = 
                 e.preventDefault();
                 e.stopPropagation();
 
-                if (hasChanges) {
-                    saveQuickUpdates();
-                } else {
-                    form.submit();
-                }
+                form.submit();
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [visible, editModalVisible, hasChanges, form, saveQuickUpdates]);
+    }, [visible, editModalVisible, form]);
 
     if (!drug) return null;
 
